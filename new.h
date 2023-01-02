@@ -51,4 +51,5 @@ struct Level {
     SDL_Rect floor;
     struct Projectile projectiles[1024];
     int numOfProjectiles;
+    
 } level;

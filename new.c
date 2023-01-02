@@ -246,7 +246,8 @@ void applyForces() {
     updateShipLocation();
 
     updateProjectileLocations();
-
+    
+    /*
     sprintf(game.textStr, "v_y = %.2f, F_y_t = %.2f, s_y = %.2f, phi = %.2f", ship1.v_y, ship1.F_y_total, ship1.s_y, ship1.thrust_angle);
     game.surfaceText = TTF_RenderText_Solid(game.myFont, game.textStr, game.textColor);
 
@@ -257,6 +258,7 @@ void applyForces() {
     // We are done with it after we have uploaded to
     // the texture
     SDL_FreeSurface(game.surfaceText); 
+    */
 
     t_start = SDL_GetTicks();
 }
