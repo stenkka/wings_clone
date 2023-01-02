@@ -301,21 +301,11 @@ void checkProjectileCollision() {
         // check floor and roof collisions
         // roof
         else if (level.projectiles[i].y - level.projectiles[i].radius <= 0) {
-            if (level.projectiles[i].angle < 90) {
-                level.projectiles[i].angle = 360 - level.projectiles[i].angle;
-            }
-            else {
-                level.projectiles[i].angle = 360 - level.projectiles[i].angle;
-            }
+            level.projectiles[i].angle = 360 - level.projectiles[i].angle;
         }
         // floor
         else if (level.projectiles[i].y + level.projectiles[i].radius >= 800) {
-            if (level.projectiles[i].angle < 270) {
-                level.projectiles[i].angle = 360 - level.projectiles[i].angle;
-            }
-            else {
-                level.projectiles[i].angle = 360 - level.projectiles[i].angle;
-            }
+            level.projectiles[i].angle = 360 - level.projectiles[i].angle;
         }
     }
 }
