@@ -10,15 +10,18 @@
 
 #define FPS             144
 
-#define SCREEN_WIDTH    1920
-#define SCREEN_HEIGHT   1080
+#define SCREEN_WIDTH    800
+#define SCREEN_HEIGHT   800
 
-#define GRAVITY              400;
-#define NORMAL_FORCE         400;
+#define GRAVITY              400
+#define NORMAL_FORCE         400
+
+#define PROJECTILE_VELOCITY  20
+#define PROJECTILE_RADIUS    10
 
 struct timespec start, end;
 
-Uint32 t_end, t_start;
+Uint32 t_end, t_start, t_projectile;
 
 void initWindow() {
     	if(SDL_Init(SDL_INIT_VIDEO) < 0){
@@ -28,7 +31,7 @@ void initWindow() {
             printf("SDL video system is ready to go\n");
         }
         game.running = 1;
-		game.window = SDL_CreateWindow( "GAME", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN_DESKTOP );
+		game.window = SDL_CreateWindow( "GAME", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
 		game.renderer =  SDL_CreateRenderer(game.window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED );
 		game.screenSurface = SDL_GetWindowSurface(game.window);
 }
@@ -204,8 +207,8 @@ void updateProjectileLocations() {
             level.projectiles[i].y += level.projectiles[i].v*cos((270 - level.projectiles[i].angle) * 3.14/180);
         }
         else {
-            level.projectiles[i].x += level.projectiles[i].v*sin((360 - level.projectiles[i].angle) * 3.14/180);
-            level.projectiles[i].y += level.projectiles[i].v*cos((360 - level.projectiles[i].angle) * 3.14/180);
+            level.projectiles[i].x += level.projectiles[i].v*cos((360 - level.projectiles[i].angle) * 3.14/180);
+            level.projectiles[i].y += level.projectiles[i].v*sin((360 - level.projectiles[i].angle) * 3.14/180);
         }
     }
 }
@@ -271,7 +274,50 @@ void spawnProjectile(int x, int y, int radius, float angle, float v) {
     level.projectiles[level.numOfProjectiles - 1].y = y;
     level.projectiles[level.numOfProjectiles - 1].radius = radius;
     level.projectiles[level.numOfProjectiles - 1].angle = angle;
-    level.projectiles[level.numOfProjectiles - 1].v = 5;
+    level.projectiles[level.numOfProjectiles - 1].v = v;
+}
+
+void checkProjectileCollision() {
+    for (int i = 0;i<level.numOfProjectiles;i++) {
+        // check wall collisions
+        // right wall
+        if (level.projectiles[i].x + level.projectiles[i].radius >= 800) {
+            if (level.projectiles[i].angle < 90) {
+                level.projectiles[i].angle = 180 - level.projectiles[i].angle;
+            }
+            else {
+                level.projectiles[i].angle = 540 - level.projectiles[i].angle;
+            }
+        }
+        // left wall
+        else if (level.projectiles[i].x - level.projectiles[i].radius <= 0) {
+            if (level.projectiles[i].angle < 180) {
+                level.projectiles[i].angle = 180 - level.projectiles[i].angle;
+            }
+            else {
+                level.projectiles[i].angle = 540 - level.projectiles[i].angle;
+            }
+        }
+        // check floor and roof collisions
+        // roof
+        else if (level.projectiles[i].y - level.projectiles[i].radius <= 0) {
+            if (level.projectiles[i].angle < 90) {
+                level.projectiles[i].angle = 360 - level.projectiles[i].angle;
+            }
+            else {
+                level.projectiles[i].angle = 360 - level.projectiles[i].angle;
+            }
+        }
+        // floor
+        else if (level.projectiles[i].y + level.projectiles[i].radius >= 800) {
+            if (level.projectiles[i].angle < 270) {
+                level.projectiles[i].angle = 360 - level.projectiles[i].angle;
+            }
+            else {
+                level.projectiles[i].angle = 360 - level.projectiles[i].angle;
+            }
+        }
+    }
 }
 
 int main( int argc, char* args[]) {
@@ -296,17 +342,18 @@ int main( int argc, char* args[]) {
     SDL_Point pointArr[] = {p1, p2, p3, p1};
     ship1.trianglePoints =  pointArr;
 
-
+    /*
     int w, h;
 
     SDL_GetRendererOutputSize(game.renderer, &w, &h);
     SDL_GetWindowSize(game.window, w, h);
+    */
 
 
     level.floor.x = 0;
-    level.floor.y = 780;
-    level.floor.w = w;
-    level.floor.h = 20;
+    level.floor.y = 800;
+    level.floor.w = 800;
+    level.floor.h = 1;
 
 
     game.initWindow();
@@ -352,22 +399,11 @@ int main( int argc, char* args[]) {
 
         ship1.F_thrust = 0;
 
-        if (kbmState[SDL_SCANCODE_W] && kbmState[SDL_SCANCODE_A]) {
-            ship1.F_thrust = 1400;
-            ship1.thrust_angle += 4;
-            ship1.thrust_angle = (int)ship1.thrust_angle % 360;
-            normalizeThrustAngle();
-		}
-        else if (kbmState[SDL_SCANCODE_W] && kbmState[SDL_SCANCODE_D]) {
-            ship1.F_thrust = 1400;
-            ship1.thrust_angle -= 4;
-            ship1.thrust_angle = (int)ship1.thrust_angle % 360;
-            normalizeThrustAngle();           
-		}
-        else if (kbmState[SDL_SCANCODE_W]) {
+
+        if (kbmState[SDL_SCANCODE_W]) {
             ship1.F_thrust = 1400;
 		}
-		else if (kbmState[SDL_SCANCODE_A]) {
+		if (kbmState[SDL_SCANCODE_A]) {
             ship1.thrust_angle += 4;
             ship1.thrust_angle = (int)ship1.thrust_angle % 360;
             normalizeThrustAngle();
@@ -377,10 +413,13 @@ int main( int argc, char* args[]) {
             ship1.thrust_angle = (int)ship1.thrust_angle % 360;
             normalizeThrustAngle();    
         }
-        else if (kbmState[SDL_SCANCODE_SPACE]) {
-            spawnProjectile(ship1.trianglePoints[0].x, ship1.trianglePoints[0].y, 10, ship1.thrust_angle, 5);
+        if (kbmState[SDL_SCANCODE_SPACE]) {
+            if (SDL_GetTicks() - t_projectile > 200) {
+                spawnProjectile(ship1.trianglePoints[0].x, ship1.trianglePoints[0].y, PROJECTILE_RADIUS, ship1.thrust_angle, PROJECTILE_VELOCITY);
+                t_projectile = SDL_GetTicks();
+            }
         }
-		else if (kbmState[SDL_SCANCODE_ESCAPE]) {
+		if (kbmState[SDL_SCANCODE_ESCAPE]) {
 			game.running = 0;
 		}
  
@@ -396,7 +435,10 @@ int main( int argc, char* args[]) {
             SDL_Delay(1000 / FPS - (SDL_GetTicks() - startTick));
         }
 
+        checkProjectileCollision();
         applyForces();
+        
+
 
 		game.render();
 	}
