@@ -18,6 +18,11 @@ struct Game {
     SDL_Rect messageRect;
 } game;
 
+struct Circle {
+    int x, y, radius;
+    float v, angle;
+};
+
 struct Ship {
     SDL_Point* trianglePoints;
     float x;
@@ -35,21 +40,21 @@ struct Ship {
     double s_y;
     double t_1, t_2;
     int on_ground;
+    int numOfParticles;
+    int numOfRenderParticles;
+    int resetParticlesSwitch;
+
+    struct Circle particles[10];
 
     float (*getShipThrustX)();
     float (*getShipThrustY)();
 
-    void (*normalizeThrustAngle)();
+    void (*spawnParticle)(int radius, float v);
 } ship1;
-
-struct Projectile {
-    int x, y, radius;
-    float v, angle;
-};
 
 struct Level {
     SDL_Rect floor;
-    struct Projectile projectiles[1024];
+    struct Circle projectiles[1024];
     int numOfProjectiles;
     
 } level;
