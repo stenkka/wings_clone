@@ -1,3 +1,16 @@
+#define FPS                 144
+
+#define SCREEN_WIDTH        800
+#define SCREEN_HEIGHT       800
+
+#define GRAVITY             400
+#define NORMAL_FORCE        400
+
+#define PROJECTILE_VELOCITY 15
+#define PROJECTILE_RADIUS   8
+
+#define PARTICLE_VELOCITY   6
+#define PARTICLE_RADIUS     2
 
 struct Game {
     SDL_Window* window;
@@ -9,13 +22,12 @@ struct Game {
 	TTF_Font* myFont;
 	SDL_Renderer *renderer;
 	SDL_Event event;
+    SDL_Rect messageRect;
     int running;
 
-    void (*initWindow)();
     TTF_Font* (*initFont)();
-    void (*initLevel)();
+    void (*initWindow)();
     void (*render)();
-    SDL_Rect messageRect;
 } game;
 
 struct Circle {
@@ -45,12 +57,9 @@ struct Ship {
     int resetParticlesSwitch;
 
     struct Circle particles[10];
+};
 
-    float (*getShipThrustX)();
-    float (*getShipThrustY)();
-
-    void (*spawnParticle)(int radius, float v);
-} ship1;
+typedef struct Ship Ship;
 
 struct Level {
     SDL_Rect floor;

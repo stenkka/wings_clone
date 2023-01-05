@@ -1,6 +1,5 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
-#include "new.h"
 
 #include <stdio.h>
 #include <sys/time.h>
@@ -8,23 +7,11 @@
 #include <stdint.h>
 #include <memory.h>
 
-#define FPS                 144
+#include "new.h"
 
-#define SCREEN_WIDTH        800
-#define SCREEN_HEIGHT       800
+Uint32 t_end, t_start, t_projectile, startTick;
 
-#define GRAVITY             400
-#define NORMAL_FORCE        400
-
-#define PROJECTILE_VELOCITY 15
-#define PROJECTILE_RADIUS   8
-
-#define PARTICLE_VELOCITY   6
-#define PARTICLE_RADIUS     2
-
-struct timespec start, end;
-
-Uint32 t_end, t_start, t_projectile;
+Ship ship1;
 
 void initWindow() {
     	if(SDL_Init(SDL_INIT_VIDEO) < 0){
@@ -39,10 +26,6 @@ void initWindow() {
 		game.screenSurface = SDL_GetWindowSurface(game.window);
 }
 
-void initLevel() {
-
-}
-
 TTF_Font* initFont() {
 	if(TTF_Init() == -1){
 			printf("Could not initailize SDL2_ttf, error: %s\n", TTF_GetError());
@@ -54,12 +37,13 @@ TTF_Font* initFont() {
 	// Load our font file and set the font size
 	TTF_Font* myFont = TTF_OpenFont("./fonts/Orbitron-Medium.ttf", 128);
 	// Confirm that it was loaded
-	if(myFont == NULL) {
+	if (myFont == NULL) {
 		printf("Could not load font\n");
 		return NULL;
 	}
 	return myFont;
 }
+
 void renderCircles() {
     SDL_SetRenderDrawColor(game.renderer,0,0,255,0);
     for (int i = 0;i<level.numOfProjectiles;i++) {
@@ -83,15 +67,13 @@ void renderCircles() {
             SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x - y, level.projectiles[i].y - x);
             SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x - y, level.projectiles[i].y + x);
 
-            if (error <= 0)
-            {
+            if (error <= 0) {
                 ++y;
                 error += ty;
                 ty += 2;
             }
 
-            if (error > 0)
-            {
+            if (error > 0) {
                 --x;
                 tx += 2;
                 error += (tx - diameter);
@@ -170,20 +152,6 @@ void updateShipRotation() {
     ship1.trianglePoints[3].y = ship1.y - ship1.r*sin(ship1.thrust_angle * 3.14/180);
 }
 
-void updateShipMovement() {
-    ship1.trianglePoints[0].x += ship1.r*cos(ship1.thrust_angle * 3.14/180);
-    ship1.trianglePoints[0].y -= ship1.r*sin(ship1.thrust_angle * 3.14/180);
-
-    ship1.trianglePoints[1].x += ship1.r*cos(ship1.thrust_angle * 3.14/180);
-    ship1.trianglePoints[1].y -= ship1.r*sin(ship1.thrust_angle * 3.14/180);
-
-    ship1.trianglePoints[2].x += ship1.r*cos(ship1.thrust_angle * 3.14/180);
-    ship1.trianglePoints[2].y -= ship1.r*sin(ship1.thrust_angle * 3.14/180);
-
-    ship1.trianglePoints[3].x += ship1.r*cos(ship1.thrust_angle * 3.14/180);
-    ship1.trianglePoints[3].y -= ship1.r*sin(ship1.thrust_angle * 3.14/180);
-}
-
 void updateShipLocation() {
     if (ship1.thrust_angle <= 90 && ship1.thrust_angle > 0) {
         ship1.x = ship1.trianglePoints[0].x - ship1.r*cos(ship1.thrust_angle * 3.14/180);
@@ -203,33 +171,33 @@ void updateShipLocation() {
     }
 }
 
-float getShipThrustX() {
-    if (ship1.thrust_angle <= 90 && ship1.thrust_angle > 0) {
-        return ship1.F_thrust*cos(ship1.thrust_angle * 3.14/180);
+float getShipThrustX(Ship* ship) {
+    if (ship->thrust_angle <= 90 && ship->thrust_angle > 0) {
+        return ship->F_thrust*cos(ship->thrust_angle * 3.14/180);
     }
-    else if (ship1.thrust_angle <= 180 && ship1.thrust_angle > 90) {
-        return -ship1.F_thrust*cos((180 - ship1.thrust_angle) * 3.14/180);
+    else if (ship->thrust_angle <= 180 && ship->thrust_angle > 90) {
+        return -ship->F_thrust*cos((180 - ship->thrust_angle) * 3.14/180);
     }
-    else if (ship1.thrust_angle > 180 && ship1.thrust_angle <= 270) {
-        return -ship1.F_thrust*sin((270 - ship1.thrust_angle) * 3.14/180);
+    else if (ship->thrust_angle > 180 && ship->thrust_angle <= 270) {
+        return -ship->F_thrust*sin((270 - ship->thrust_angle) * 3.14/180);
     }
     else {
-        return ship1.F_thrust*sin((360 - ship1.thrust_angle) * 3.14/180);
+        return ship->F_thrust*sin((360 - ship->thrust_angle) * 3.14/180);
     }  
 }
     
-float getShipThrustY() {
-    if (ship1.thrust_angle <= 90 && ship1.thrust_angle > 0) {
-        return ship1.F_thrust*sin(ship1.thrust_angle * 3.14/180);
+float getShipThrustY(Ship* ship) {
+    if (ship->thrust_angle <= 90 && ship->thrust_angle > 0) {
+        return ship->F_thrust*sin(ship->thrust_angle * 3.14/180);
     }
-    else if (ship1.thrust_angle <= 180 && ship1.thrust_angle > 90) {
-        return ship1.F_thrust*sin((180 - ship1.thrust_angle) * 3.14/180);
+    else if (ship->thrust_angle <= 180 && ship->thrust_angle > 90) {
+        return ship->F_thrust*sin((180 - ship->thrust_angle) * 3.14/180);
     }
-    else if (ship1.thrust_angle > 180 && ship1.thrust_angle <= 270) {
-        return -ship1.F_thrust*cos((270 - ship1.thrust_angle) * 3.14/180);
+    else if (ship->thrust_angle > 180 && ship->thrust_angle <= 270) {
+        return -ship->F_thrust*cos((270 - ship->thrust_angle) * 3.14/180);
     }
     else {
-        return -ship1.F_thrust*cos((360 - ship1.thrust_angle) * 3.14/180);
+        return -ship->F_thrust*cos((360 - ship->thrust_angle) * 3.14/180);
     }  
 }
 
@@ -282,15 +250,15 @@ void applyForces() {
     double delta_s = ((double)t_end - (double)t_start) / 1000;
 
     if (!ship1.on_ground) {
-        ship1.F_x_total = ship1.getShipThrustX();
-        ship1.F_y_total = ship1.getShipThrustY() - GRAVITY;
+        ship1.F_x_total = getShipThrustX(&ship1);
+        ship1.F_y_total = getShipThrustY(&ship1) - GRAVITY;
 
         ship1.v_x = ship1.v_x + ship1.F_x_total*delta_s;
         ship1.v_y = ship1.v_y + ship1.F_y_total*delta_s;
     }
     else {
-        ship1.F_y_total = ship1.getShipThrustY() - GRAVITY + NORMAL_FORCE;
-        ship1.F_x_total = ship1.getShipThrustX();
+        ship1.F_y_total = getShipThrustY(&ship1) - GRAVITY + NORMAL_FORCE;
+        ship1.F_x_total = getShipThrustX(&ship1);
 
         ship1.v_x = ship1.v_x + ship1.F_x_total*delta_s;
         ship1.v_y = ship1.F_y_total*delta_s;
@@ -387,24 +355,24 @@ void checkProjectileCollision() {
     }
 }
 
-spawnParticle(int radius, float v) {
-    ship1.numOfParticles += 2;
-    ship1.particles[(ship1.numOfParticles - 1) % 10].x = ship1.trianglePoints[1].x;
-    ship1.particles[(ship1.numOfParticles - 1) % 10].y = ship1.trianglePoints[1].y;
-    ship1.particles[(ship1.numOfParticles - 1) % 10].radius = radius;
-    ship1.particles[(ship1.numOfParticles - 1) % 10].angle = ship1.thrust_angle + 180;
-    ship1.particles[(ship1.numOfParticles - 1) % 10].v = v;
+spawnParticle(Ship* ship, int radius, float v) {
+    ship->numOfParticles += 2;
+    ship->particles[(ship->numOfParticles - 1) % 10].x = ship->trianglePoints[1].x;
+    ship->particles[(ship->numOfParticles - 1) % 10].y = ship->trianglePoints[1].y;
+    ship->particles[(ship->numOfParticles - 1) % 10].radius = radius;
+    ship->particles[(ship->numOfParticles - 1) % 10].angle = ship->thrust_angle + 180;
+    ship->particles[(ship->numOfParticles - 1) % 10].v = v;
 
-    ship1.particles[(ship1.numOfParticles) % 10].x = ship1.trianglePoints[2].x;
-    ship1.particles[(ship1.numOfParticles) % 10].y = ship1.trianglePoints[2].y;
-    ship1.particles[(ship1.numOfParticles) % 10].radius = radius;
-    ship1.particles[(ship1.numOfParticles) % 10].angle = ship1.thrust_angle + 180;
-    ship1.particles[(ship1.numOfParticles) % 10].v = v;
+    ship->particles[(ship->numOfParticles) % 10].x = ship->trianglePoints[2].x;
+    ship->particles[(ship->numOfParticles) % 10].y = ship->trianglePoints[2].y;
+    ship->particles[(ship->numOfParticles) % 10].radius = radius;
+    ship->particles[(ship->numOfParticles) % 10].angle = ship->thrust_angle + 180;
+    ship->particles[(ship->numOfParticles) % 10].v = v;
 }
 
-resetParticles() {
-    for (int i = 0;i<ship1.numOfRenderParticles;i++) {
-        ship1.particles[i].radius = 0;
+resetParticles(Ship* ship) {
+    for (int i = 0;i<ship->numOfRenderParticles;i++) {
+        ship->particles[i].radius = 0;
     }
 }
 
@@ -412,11 +380,6 @@ int main( int argc, char* args[]) {
 	game.initWindow = initWindow;
     game.initFont = initFont;
     game.render = render;
-    game.initLevel = initLevel;
-
-    ship1.getShipThrustX = getShipThrustX;
-    ship1.getShipThrustY = getShipThrustY;
-    ship1.spawnParticle = spawnParticle;
 
     ship1.r = 10;
     ship1.thrust_angle = 90;
@@ -443,10 +406,7 @@ int main( int argc, char* args[]) {
     level.floor.w = 800;
     level.floor.h = 1;
 
-
     game.initWindow();
-    game.initLevel();
-
 
 	game.myFont = game.initFont();
 
@@ -470,8 +430,6 @@ int main( int argc, char* args[]) {
 	
     int on_ground = 0;
 	
-    Uint32 startTick;
-
     while (game.running) {
 		while(SDL_PollEvent(&game.event)) {
 	    	switch(game.event.type) {
@@ -491,7 +449,7 @@ int main( int argc, char* args[]) {
             ship1.F_thrust = 1400;
             ship1.numOfRenderParticles = 10;
             ship1.resetParticlesSwitch = 0;
-            ship1.spawnParticle(PARTICLE_RADIUS, PARTICLE_VELOCITY);
+            spawnParticle(&ship1 ,PARTICLE_RADIUS, PARTICLE_VELOCITY);
 		}
 		if (kbmState[SDL_SCANCODE_A]) {
             ship1.thrust_angle += 4;
@@ -520,7 +478,7 @@ int main( int argc, char* args[]) {
         }
         
         if (ship1.resetParticlesSwitch) {
-            resetParticles();
+            resetParticles(&ship1);
         }
         checkProjectileCollision();
         applyForces();
