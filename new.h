@@ -8,6 +8,7 @@
 
 #define PROJECTILE_VELOCITY 15
 #define PROJECTILE_RADIUS   8
+#define PROJECTILE_RATE     
 
 #define PARTICLE_VELOCITY   6
 #define PARTICLE_RADIUS     2
@@ -67,3 +68,10 @@ struct Level {
     int numOfProjectiles;
     
 } level;
+
+struct node {
+    struct Circle projectile;
+    struct node *next;
+};
+
+typedef struct node node_t;

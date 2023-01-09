@@ -13,6 +13,8 @@ Uint32 t_end, t_start, t_projectile, startTick;
 
 Ship ship1;
 
+node_t *projectileListTmp, *projectileListHead = NULL;
+
 void initWindow() {
     	if(SDL_Init(SDL_INIT_VIDEO) < 0){
 		printf("SDL could not be initialized: %s\n", SDL_GetError());
@@ -46,10 +48,11 @@ TTF_Font* initFont() {
 
 void renderCircles() {
     SDL_SetRenderDrawColor(game.renderer,0,0,255,0);
-    for (int i = 0;i<level.numOfProjectiles;i++) {
-        const int32_t diameter = level.projectiles[i].radius * 2;
+    projectileListTmp = projectileListHead;
+    while (projectileListTmp != NULL) {
+        const int32_t diameter = projectileListTmp->projectile.radius * 2;
 
-        int32_t x = (level.projectiles[i].radius - 1);
+        int32_t x = (projectileListTmp->projectile.radius - 1);
         int32_t y = 0;
         int32_t tx = 1;
         int32_t ty = 1;
@@ -58,14 +61,14 @@ void renderCircles() {
         int a;
         while (x >= y) {
             //  Each of the following renders an octant of the circle
-            SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x + x, level.projectiles[i].y - y);
-            SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x + x, level.projectiles[i].y + y);
-            SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x - x, level.projectiles[i].y - y);
-            SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x - x, level.projectiles[i].y + y);
-            SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x + y, level.projectiles[i].y - x);
-            SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x + y, level.projectiles[i].y + x);
-            SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x - y, level.projectiles[i].y - x);
-            SDL_RenderDrawPoint(game.renderer, level.projectiles[i].x - y, level.projectiles[i].y + x);
+            SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x + x, projectileListTmp->projectile.y - y);
+            SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x + x, projectileListTmp->projectile.y + y);
+            SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x - x, projectileListTmp->projectile.y - y);
+            SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x - x, projectileListTmp->projectile.y + y);
+            SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x + y, projectileListTmp->projectile.y - x);
+            SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x + y, projectileListTmp->projectile.y + x);
+            SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x - y, projectileListTmp->projectile.y - x);
+            SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x - y, projectileListTmp->projectile.y + x);
 
             if (error <= 0) {
                 ++y;
@@ -79,6 +82,7 @@ void renderCircles() {
                 error += (tx - diameter);
             }
         }
+        projectileListTmp = projectileListTmp->next;
     }
 
 	SDL_SetRenderDrawColor(game.renderer,255,255,0,0);
@@ -136,6 +140,12 @@ void render() {
     SDL_RenderCopy(game.renderer,game.textureText,NULL,&game.messageRect);
 	
 	SDL_RenderPresent(game.renderer);
+}
+
+void addProjectileNode(node_t **head) {
+    node_t *newNode = malloc(sizeof(node_t));
+    newNode->next = *head;
+    *head = newNode;
 }
 
 void updateShipRotation() {
@@ -202,23 +212,25 @@ float getShipThrustY(Ship* ship) {
 }
 
 void updateProjectileLocations() {
-    for (int i = 0;i<level.numOfProjectiles;i++) {
-        if (level.projectiles[i].angle <= 90 && level.projectiles[i].angle > 0) {
-            level.projectiles[i].x += level.projectiles[i].v*cos(level.projectiles[i].angle * 3.14/180);
-            level.projectiles[i].y -= level.projectiles[i].v*sin(level.projectiles[i].angle * 3.14/180);
+    projectileListTmp = projectileListHead;
+    while (projectileListTmp != NULL) {
+        if (projectileListTmp->projectile.angle <= 90 && projectileListTmp->projectile.angle > 0) {
+            projectileListTmp->projectile.x += projectileListTmp->projectile.v*cos(projectileListTmp->projectile.angle * 3.14/180);
+            projectileListTmp->projectile.y -= projectileListTmp->projectile.v*sin(projectileListTmp->projectile.angle * 3.14/180);
         }
-        else if (level.projectiles[i].angle <= 180 && level.projectiles[i].angle > 90) {
-            level.projectiles[i].x -= level.projectiles[i].v*cos((180 - level.projectiles[i].angle) * 3.14/180);
-            level.projectiles[i].y -= level.projectiles[i].v*sin((180 - level.projectiles[i].angle) * 3.14/180);
+        else if (projectileListTmp->projectile.angle <= 180 && projectileListTmp->projectile.angle > 90) {
+            projectileListTmp->projectile.x -= projectileListTmp->projectile.v*cos((180 - projectileListTmp->projectile.angle) * 3.14/180);
+            projectileListTmp->projectile.y -= projectileListTmp->projectile.v*sin((180 - projectileListTmp->projectile.angle) * 3.14/180);
         }
-        else if (level.projectiles[i].angle > 180 && level.projectiles[i].angle <= 270) {
-            level.projectiles[i].x -= level.projectiles[i].v*sin((270 - level.projectiles[i].angle) * 3.14/180);
-            level.projectiles[i].y += level.projectiles[i].v*cos((270 - level.projectiles[i].angle) * 3.14/180);
+        else if (projectileListTmp->projectile.angle > 180 && projectileListTmp->projectile.angle <= 270) {
+            projectileListTmp->projectile.x -= projectileListTmp->projectile.v*sin((270 - projectileListTmp->projectile.angle) * 3.14/180);
+            projectileListTmp->projectile.y += projectileListTmp->projectile.v*cos((270 - projectileListTmp->projectile.angle) * 3.14/180);
         }
         else {
-            level.projectiles[i].x += level.projectiles[i].v*cos((360 - level.projectiles[i].angle) * 3.14/180);
-            level.projectiles[i].y += level.projectiles[i].v*sin((360 - level.projectiles[i].angle) * 3.14/180);
+            projectileListTmp->projectile.x += projectileListTmp->projectile.v*cos((360 - projectileListTmp->projectile.angle) * 3.14/180);
+            projectileListTmp->projectile.y += projectileListTmp->projectile.v*sin((360 - projectileListTmp->projectile.angle) * 3.14/180);
         }
+        projectileListTmp = projectileListTmp->next;
     }
 }
 
@@ -267,7 +279,6 @@ void applyForces() {
     ship1.s_x = (int)ship1.v_x*delta_s;    
     ship1.s_y = (int)ship1.v_y*delta_s;
 
-
     for (int i = 0;i<4;i++) {
         ship1.trianglePoints[i].x += ship1.s_x;
         ship1.trianglePoints[i].y -= ship1.s_y;
@@ -306,52 +317,54 @@ float normalizeThrustAngle(float thrust_angle) {
         angle = thrust_angle;
     }
     return angle;
-
 }
 
 void spawnProjectile(int x, int y, int radius, float angle, float v) {
-    level.numOfProjectiles++;
-    level.projectiles[level.numOfProjectiles - 1].x = x;
-    level.projectiles[level.numOfProjectiles - 1].y = y;
-    level.projectiles[level.numOfProjectiles - 1].radius = radius;
-    level.projectiles[level.numOfProjectiles - 1].angle = angle;
-    level.projectiles[level.numOfProjectiles - 1].v = v;
+    //level.numOfProjectiles++;
+    addProjectileNode(&projectileListHead);
+    projectileListHead->projectile.x = x;
+    projectileListHead->projectile.y = y;
+    projectileListHead->projectile.radius = radius;
+    projectileListHead->projectile.angle = angle;
+    projectileListHead->projectile.v = v;
 }
 
 void checkProjectileCollision() {
-    for (int i = 0;i<level.numOfProjectiles;i++) {
+    projectileListTmp = projectileListHead;
+    while (projectileListTmp != NULL) {
         // check wall collisions
         // right wall
-        if (level.projectiles[i].x + level.projectiles[i].radius >= 800) {
-            if (level.projectiles[i].angle < 90) {
-                level.projectiles[i].angle = 180 - level.projectiles[i].angle;
+        if (projectileListTmp->projectile.x + projectileListTmp->projectile.radius >= SCREEN_WIDTH) {
+            if (projectileListTmp->projectile.angle < 90) {
+                projectileListTmp->projectile.angle = 180 - projectileListTmp->projectile.angle;
             }
             else {
-                level.projectiles[i].angle = 540 - level.projectiles[i].angle;
+                projectileListTmp->projectile.angle = 540 - projectileListTmp->projectile.angle;
             }
         }
         // left wall
-        else if (level.projectiles[i].x - level.projectiles[i].radius <= 0) {
-            if (level.projectiles[i].angle < 180) {
-                level.projectiles[i].angle = 180 - level.projectiles[i].angle;
-                level.projectiles[i].x = level.projectiles[i].radius;
+        else if (projectileListTmp->projectile.x - projectileListTmp->projectile.radius <= 0) {
+            if (projectileListTmp->projectile.angle < 180) {
+                projectileListTmp->projectile.angle = 180 - projectileListTmp->projectile.angle;
+                projectileListTmp->projectile.x = projectileListTmp->projectile.radius;
             }
             else {
-                level.projectiles[i].angle = 540 - level.projectiles[i].angle;
-                level.projectiles[i].x = level.projectiles[i].radius;
+                projectileListTmp->projectile.angle = 540 - projectileListTmp->projectile.angle;
+                projectileListTmp->projectile.x = projectileListTmp->projectile.radius;
             }
         }
         // check floor and roof collisions
         // roof
-        else if (level.projectiles[i].y - level.projectiles[i].radius <= 0) {
-            level.projectiles[i].angle = 360 - level.projectiles[i].angle;
-            level.projectiles[i].y = level.projectiles[i].radius;
+        else if (projectileListTmp->projectile.y - projectileListTmp->projectile.radius <= 0) {
+            projectileListTmp->projectile.angle = 360 - projectileListTmp->projectile.angle;
+            projectileListTmp->projectile.y = projectileListTmp->projectile.radius;
         }
         // floor
-        else if (level.projectiles[i].y + level.projectiles[i].radius >= 800) {
-            level.projectiles[i].angle = 360 - level.projectiles[i].angle;
-            level.projectiles[i].y = 800 - level.projectiles[i].radius;
+        else if (projectileListTmp->projectile.y + projectileListTmp->projectile.radius >= SCREEN_HEIGHT) {
+            projectileListTmp->projectile.angle = 360 - projectileListTmp->projectile.angle;
+            projectileListTmp->projectile.y = SCREEN_HEIGHT - projectileListTmp->projectile.radius;
         }
+        projectileListTmp = projectileListTmp->next;
     }
 }
 
@@ -460,7 +473,7 @@ int main( int argc, char* args[]) {
             ship1.thrust_angle = normalizeThrustAngle((int)ship1.thrust_angle % 360);
         }
         if (kbmState[SDL_SCANCODE_SPACE]) {
-            if (SDL_GetTicks() - t_projectile > 200) {
+            if (SDL_GetTicks() - t_projectile > 100) {
                 spawnProjectile(ship1.trianglePoints[0].x, ship1.trianglePoints[0].y, PROJECTILE_RADIUS, ship1.thrust_angle, PROJECTILE_VELOCITY);
                 t_projectile = SDL_GetTicks();
             }
