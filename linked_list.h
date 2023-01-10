@@ -12,5 +12,6 @@ typedef struct projectileNode prNode_t;
 
 prNode_t *createProjectileNode(prNode_t *head);
 void prependProjectileNode(prNode_t **head, prNode_t *newNode);
+void appendProjectileNode(prNode_t **head, prNode_t *newNode);
 
 #endif
