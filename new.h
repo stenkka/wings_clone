@@ -1,3 +1,6 @@
+#include <SDL.h>
+#include <SDL_ttf.h>
+
 #define FPS                 144
 
 #define SCREEN_WIDTH        800
@@ -12,6 +15,9 @@
 
 #define PARTICLE_VELOCITY   6
 #define PARTICLE_RADIUS     2
+
+#ifndef _NEW_H_
+#define _NEW_H_
 
 struct Game {
     SDL_Window* window;
@@ -63,15 +69,7 @@ struct Ship {
 typedef struct Ship Ship;
 
 struct Level {
-    SDL_Rect floor;
-    struct Circle projectiles[1024];
-    int numOfProjectiles;
-    
+    SDL_Rect floor;    
 } level;
 
-struct node {
-    struct Circle projectile;
-    struct node *next;
-};
-
-typedef struct node node_t;
+#endif

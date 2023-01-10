@@ -7,13 +7,17 @@
 #include <stdint.h>
 #include <memory.h>
 
+#include "linked_list.h"
+
 #include "new.h"
+
+//#include "linked_list.h"
 
 Uint32 t_end, t_start, t_projectile, startTick;
 
 Ship ship1;
 
-node_t *projectileListTmp, *projectileListHead = NULL;
+prNode_t *projectileListTmp, *projectileListHead = NULL;
 
 void initWindow() {
     	if(SDL_Init(SDL_INIT_VIDEO) < 0){
@@ -140,12 +144,6 @@ void render() {
     SDL_RenderCopy(game.renderer,game.textureText,NULL,&game.messageRect);
 	
 	SDL_RenderPresent(game.renderer);
-}
-
-void addProjectileNode(node_t **head) {
-    node_t *newNode = malloc(sizeof(node_t));
-    newNode->next = *head;
-    *head = newNode;
 }
 
 void updateShipRotation() {
@@ -321,7 +319,7 @@ float normalizeThrustAngle(float thrust_angle) {
 
 void spawnProjectile(int x, int y, int radius, float angle, float v) {
     //level.numOfProjectiles++;
-    addProjectileNode(&projectileListHead);
+    prependProjectileNode(&projectileListHead, createProjectileNode(projectileListHead));
     projectileListHead->projectile.x = x;
     projectileListHead->projectile.y = y;
     projectileListHead->projectile.radius = radius;
@@ -422,8 +420,6 @@ int main( int argc, char* args[]) {
     game.initWindow();
 
 	game.myFont = game.initFont();
-
-    // Pixels from our text
     
     game.textColor.r = 0;
     game.textColor.g = 255;

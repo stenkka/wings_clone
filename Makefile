@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = new.c
+OBJS = new.c linked_list.c
 
 #CC specifies which compiler we're using
 CXX = clang
