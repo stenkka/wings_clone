@@ -24,3 +24,13 @@ void appendProjectileNode(prNode_t **head, prNode_t *newNode) {
     newNode->next = *tmp;
     *tmp = newNode;
 }
+
+void freeProjectileNodes(prNode_t **head) {
+    prNode_t **tmp = head;
+    while (*head) {
+        tmp = head;
+        head = &(*head)->next;
+        free(*tmp);
+        *tmp = NULL;
+    }
+}

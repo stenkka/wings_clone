@@ -40,6 +40,7 @@ struct Game {
 struct Circle {
     int x, y, radius;
     float v, angle;
+    uint8_t r, g, b;
 };
 
 struct Ship {

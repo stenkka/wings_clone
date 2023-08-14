@@ -11,19 +11,26 @@
 
 #include "new.h"
 
-//#include "linked_list.h"
-
 Uint32 t_end, t_start, t_projectile, startTick;
 
 Ship ship1;
 
 prNode_t *projectileListTmp, *projectileListHead = NULL;
 
-void initWindow() {
-    	if(SDL_Init(SDL_INIT_VIDEO) < 0){
+uint8_t circleColorR = 0;
+uint8_t circleColorG = 0;
+uint8_t circleColorB = 0;
+
+int colorStep = 2;
+
+void initWindow()
+{
+    	if(SDL_Init(SDL_INIT_VIDEO) < 0)
+        {
 		printf("SDL could not be initialized: %s\n", SDL_GetError());
         }
-        else {
+        else
+        {
             printf("SDL video system is ready to go\n");
         }
         game.running = 1;
@@ -32,28 +39,36 @@ void initWindow() {
 		game.screenSurface = SDL_GetWindowSurface(game.window);
 }
 
-TTF_Font* initFont() {
-	if(TTF_Init() == -1){
+TTF_Font* initFont()
+{
+	if(TTF_Init() == -1)
+    {
 			printf("Could not initailize SDL2_ttf, error: %s\n", TTF_GetError());
 	}
-	else {
+	else
+    {
 		printf("SDL2_ttf system ready to go!\n");
 	}
 
 	// Load our font file and set the font size
 	TTF_Font* myFont = TTF_OpenFont("./fonts/Orbitron-Medium.ttf", 128);
 	// Confirm that it was loaded
-	if (myFont == NULL) {
+	if (myFont == NULL)
+    {
 		printf("Could not load font\n");
 		return NULL;
 	}
 	return myFont;
 }
 
-void renderCircles() {
+void renderCircles()
+{
     SDL_SetRenderDrawColor(game.renderer,0,0,255,0);
     projectileListTmp = projectileListHead;
-    while (projectileListTmp != NULL) {
+    while (projectileListTmp != NULL)
+    {
+        SDL_SetRenderDrawColor(game.renderer, projectileListTmp->projectile.r, projectileListTmp->projectile.g, projectileListTmp->projectile.b, 100);
+
         const int32_t diameter = projectileListTmp->projectile.radius * 2;
 
         int32_t x = (projectileListTmp->projectile.radius - 1);
@@ -63,7 +78,8 @@ void renderCircles() {
         int32_t error = (tx - diameter);
 
         int a;
-        while (x >= y) {
+        while (x >= y)
+        {
             //  Each of the following renders an octant of the circle
             SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x + x, projectileListTmp->projectile.y - y);
             SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x + x, projectileListTmp->projectile.y + y);
@@ -74,13 +90,15 @@ void renderCircles() {
             SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x - y, projectileListTmp->projectile.y - x);
             SDL_RenderDrawPoint(game.renderer, projectileListTmp->projectile.x - y, projectileListTmp->projectile.y + x);
 
-            if (error <= 0) {
+            if (error <= 0)
+            {
                 ++y;
                 error += ty;
                 ty += 2;
             }
 
-            if (error > 0) {
+            if (error > 0)
+            {
                 --x;
                 tx += 2;
                 error += (tx - diameter);
@@ -90,7 +108,8 @@ void renderCircles() {
     }
 
 	SDL_SetRenderDrawColor(game.renderer,255,255,0,0);
-    for (int i = 0;i<ship1.numOfRenderParticles;i++) {
+    for (int i = 0;i<ship1.numOfRenderParticles;i++)
+    {
         const int32_t diameter = ship1.particles[i].radius * 2;
 
         int32_t x = (ship1.particles[i].radius - 1);
@@ -101,7 +120,8 @@ void renderCircles() {
 
         int a;
 
-        while (x >= y) {
+        while (x >= y)
+        {
             //  Each of the following renders an octant of the circle
             SDL_RenderDrawPoint(game.renderer, ship1.particles[i].x + x, ship1.particles[i].y - y);
             SDL_RenderDrawPoint(game.renderer, ship1.particles[i].x + x, ship1.particles[i].y + y);
@@ -129,7 +149,8 @@ void renderCircles() {
     }
 }
 
-void render() {
+void render()
+{
 	SDL_SetRenderDrawColor(game.renderer,180,180,180,0);
 	SDL_RenderClear(game.renderer);
 	
@@ -146,7 +167,8 @@ void render() {
 	SDL_RenderPresent(game.renderer);
 }
 
-void updateShipRotation() {
+void updateShipRotation()
+{
     ship1.trianglePoints[0].x = ship1.x + ship1.r*cos(ship1.thrust_angle * 3.14/180);
     ship1.trianglePoints[0].y = ship1.y - ship1.r*sin(ship1.thrust_angle * 3.14/180);
 
@@ -160,7 +182,8 @@ void updateShipRotation() {
     ship1.trianglePoints[3].y = ship1.y - ship1.r*sin(ship1.thrust_angle * 3.14/180);
 }
 
-void updateShipLocation() {
+void updateShipLocation()
+{
     if (ship1.thrust_angle <= 90 && ship1.thrust_angle > 0) {
         ship1.x = ship1.trianglePoints[0].x - ship1.r*cos(ship1.thrust_angle * 3.14/180);
         ship1.y = ship1.trianglePoints[0].y + ship1.r*sin(ship1.thrust_angle * 3.14/180);
@@ -179,7 +202,8 @@ void updateShipLocation() {
     }
 }
 
-float getShipThrustX(Ship* ship) {
+float getShipThrustX(Ship* ship)
+{
     if (ship->thrust_angle <= 90 && ship->thrust_angle > 0) {
         return ship->F_thrust*cos(ship->thrust_angle * 3.14/180);
     }
@@ -194,7 +218,8 @@ float getShipThrustX(Ship* ship) {
     }  
 }
     
-float getShipThrustY(Ship* ship) {
+float getShipThrustY(Ship* ship)
+{
     if (ship->thrust_angle <= 90 && ship->thrust_angle > 0) {
         return ship->F_thrust*sin(ship->thrust_angle * 3.14/180);
     }
@@ -209,22 +234,28 @@ float getShipThrustY(Ship* ship) {
     }  
 }
 
-void updateProjectileLocations() {
+void updateProjectileLocations()
+{
     projectileListTmp = projectileListHead;
-    while (projectileListTmp != NULL) {
-        if (projectileListTmp->projectile.angle <= 90 && projectileListTmp->projectile.angle > 0) {
+    while (projectileListTmp != NULL)
+    {
+        if (projectileListTmp->projectile.angle <= 90 && projectileListTmp->projectile.angle > 0)
+        {
             projectileListTmp->projectile.x += projectileListTmp->projectile.v*cos(projectileListTmp->projectile.angle * 3.14/180);
             projectileListTmp->projectile.y -= projectileListTmp->projectile.v*sin(projectileListTmp->projectile.angle * 3.14/180);
         }
-        else if (projectileListTmp->projectile.angle <= 180 && projectileListTmp->projectile.angle > 90) {
+        else if (projectileListTmp->projectile.angle <= 180 && projectileListTmp->projectile.angle > 90)
+        {
             projectileListTmp->projectile.x -= projectileListTmp->projectile.v*cos((180 - projectileListTmp->projectile.angle) * 3.14/180);
             projectileListTmp->projectile.y -= projectileListTmp->projectile.v*sin((180 - projectileListTmp->projectile.angle) * 3.14/180);
         }
-        else if (projectileListTmp->projectile.angle > 180 && projectileListTmp->projectile.angle <= 270) {
+        else if (projectileListTmp->projectile.angle > 180 && projectileListTmp->projectile.angle <= 270)
+        {
             projectileListTmp->projectile.x -= projectileListTmp->projectile.v*sin((270 - projectileListTmp->projectile.angle) * 3.14/180);
             projectileListTmp->projectile.y += projectileListTmp->projectile.v*cos((270 - projectileListTmp->projectile.angle) * 3.14/180);
         }
-        else {
+        else
+        {
             projectileListTmp->projectile.x += projectileListTmp->projectile.v*cos((360 - projectileListTmp->projectile.angle) * 3.14/180);
             projectileListTmp->projectile.y += projectileListTmp->projectile.v*sin((360 - projectileListTmp->projectile.angle) * 3.14/180);
         }
@@ -232,41 +263,50 @@ void updateProjectileLocations() {
     }
 }
 
-void updateParticleLocations() {
-    for (int i = 0;i<ship1.numOfRenderParticles;i++) {
-        if (ship1.particles[i].angle <= 90 && ship1.particles[i].angle > 0) {
+void updateParticleLocations()
+{
+    for (int i = 0;i<ship1.numOfRenderParticles;i++)
+    {
+        if (ship1.particles[i].angle <= 90 && ship1.particles[i].angle > 0)
+        {
             ship1.particles[i].x += ship1.particles[i].v*cos(ship1.particles[i].angle * 3.14/180);
             ship1.particles[i].y -= ship1.particles[i].v*sin(ship1.particles[i].angle * 3.14/180);
         }
-        else if (ship1.particles[i].angle <= 180 && ship1.particles[i].angle > 90) {
+        else if (ship1.particles[i].angle <= 180 && ship1.particles[i].angle > 90)
+        {
             ship1.particles[i].x -= ship1.particles[i].v*cos((180 - ship1.particles[i].angle) * 3.14/180);
             ship1.particles[i].y -= ship1.particles[i].v*sin((180 - ship1.particles[i].angle) * 3.14/180);
         }
-        else if (ship1.particles[i].angle > 180 && ship1.particles[i].angle <= 270) {
+        else if (ship1.particles[i].angle > 180 && ship1.particles[i].angle <= 270)
+        {
             ship1.particles[i].x -= ship1.particles[i].v*sin((270 - ship1.particles[i].angle) * 3.14/180);
             ship1.particles[i].y += ship1.particles[i].v*cos((270 - ship1.particles[i].angle) * 3.14/180);
         }
-        else {
+        else
+        {
             ship1.particles[i].x += ship1.particles[i].v*cos((360 - ship1.particles[i].angle) * 3.14/180);
             ship1.particles[i].y += ship1.particles[i].v*sin((360 - ship1.particles[i].angle) * 3.14/180);
         }
     }
 }
 
-void applyForces() {
+void applyForces()
+{
     updateShipRotation();
 
     t_end = SDL_GetTicks();
     double delta_s = ((double)t_end - (double)t_start) / 1000;
 
-    if (!ship1.on_ground) {
+    if (!ship1.on_ground)
+    {
         ship1.F_x_total = getShipThrustX(&ship1);
         ship1.F_y_total = getShipThrustY(&ship1) - GRAVITY;
 
         ship1.v_x = ship1.v_x + ship1.F_x_total*delta_s;
         ship1.v_y = ship1.v_y + ship1.F_y_total*delta_s;
     }
-    else {
+    else
+    {
         ship1.F_y_total = getShipThrustY(&ship1) - GRAVITY + NORMAL_FORCE;
         ship1.F_x_total = getShipThrustX(&ship1);
 
@@ -277,7 +317,8 @@ void applyForces() {
     ship1.s_x = (int)ship1.v_x*delta_s;    
     ship1.s_y = (int)ship1.v_y*delta_s;
 
-    for (int i = 0;i<4;i++) {
+    for (int i = 0;i<4;i++)
+    {
         ship1.trianglePoints[i].x += ship1.s_x;
         ship1.trianglePoints[i].y -= ship1.s_y;
     }
@@ -306,18 +347,33 @@ void applyForces() {
     t_start = SDL_GetTicks();
 }
 
-float normalizeThrustAngle(float thrust_angle) {
+float normalizeThrustAngle(float thrust_angle)
+{
     float angle;
-    if (thrust_angle < 0) {
+    if (thrust_angle < 0)
+    {
         angle = thrust_angle + 360;
     }
-    else {
+    else
+    {
         angle = thrust_angle;
     }
     return angle;
 }
 
-void spawnProjectile(int x, int y, int radius, float angle, float v) {
+void spawnProjectile(int x, int y, int radius, float angle, float v)
+{
+    if (circleColorB == 0)
+    {
+        colorStep = 2;
+    }
+    else if (circleColorB == 254)
+    {
+        colorStep = -2;
+    }
+    circleColorB += colorStep;
+    //circleColorG -= step + 12;
+    //circleColorB -= step + 8;
     //level.numOfProjectiles++;
     prependProjectileNode(&projectileListHead, createProjectileNode(projectileListHead));
     projectileListHead->projectile.x = x;
@@ -325,40 +381,52 @@ void spawnProjectile(int x, int y, int radius, float angle, float v) {
     projectileListHead->projectile.radius = radius;
     projectileListHead->projectile.angle = angle;
     projectileListHead->projectile.v = v;
+    projectileListHead->projectile.r = circleColorR;
+    projectileListHead->projectile.g = circleColorG;
+    projectileListHead->projectile.b = circleColorB;
 }
 
-void checkProjectileCollision() {
+void checkProjectileCollision()
+{
     projectileListTmp = projectileListHead;
     while (projectileListTmp != NULL) {
         // check wall collisions
         // right wall
-        if (projectileListTmp->projectile.x + projectileListTmp->projectile.radius >= SCREEN_WIDTH) {
-            if (projectileListTmp->projectile.angle < 90) {
+        if (projectileListTmp->projectile.x + projectileListTmp->projectile.radius >= SCREEN_WIDTH)
+        {
+            if (projectileListTmp->projectile.angle < 90)
+            {
                 projectileListTmp->projectile.angle = 180 - projectileListTmp->projectile.angle;
             }
-            else {
+            else
+            {
                 projectileListTmp->projectile.angle = 540 - projectileListTmp->projectile.angle;
             }
         }
         // left wall
-        else if (projectileListTmp->projectile.x - projectileListTmp->projectile.radius <= 0) {
-            if (projectileListTmp->projectile.angle < 180) {
+        else if (projectileListTmp->projectile.x - projectileListTmp->projectile.radius <= 0)
+        {
+            if (projectileListTmp->projectile.angle < 180)
+            {
                 projectileListTmp->projectile.angle = 180 - projectileListTmp->projectile.angle;
                 projectileListTmp->projectile.x = projectileListTmp->projectile.radius;
             }
-            else {
+            else
+            {
                 projectileListTmp->projectile.angle = 540 - projectileListTmp->projectile.angle;
                 projectileListTmp->projectile.x = projectileListTmp->projectile.radius;
             }
         }
         // check floor and roof collisions
         // roof
-        else if (projectileListTmp->projectile.y - projectileListTmp->projectile.radius <= 0) {
+        else if (projectileListTmp->projectile.y - projectileListTmp->projectile.radius <= 0)
+        {
             projectileListTmp->projectile.angle = 360 - projectileListTmp->projectile.angle;
             projectileListTmp->projectile.y = projectileListTmp->projectile.radius;
         }
         // floor
-        else if (projectileListTmp->projectile.y + projectileListTmp->projectile.radius >= SCREEN_HEIGHT) {
+        else if (projectileListTmp->projectile.y + projectileListTmp->projectile.radius >= SCREEN_HEIGHT)
+        {
             projectileListTmp->projectile.angle = 360 - projectileListTmp->projectile.angle;
             projectileListTmp->projectile.y = SCREEN_HEIGHT - projectileListTmp->projectile.radius;
         }
@@ -366,7 +434,8 @@ void checkProjectileCollision() {
     }
 }
 
-spawnParticle(Ship* ship, int radius, float v) {
+spawnParticle(Ship* ship, int radius, float v)
+{
     ship->numOfParticles += 2;
     ship->particles[(ship->numOfParticles - 1) % 10].x = ship->trianglePoints[1].x;
     ship->particles[(ship->numOfParticles - 1) % 10].y = ship->trianglePoints[1].y;
@@ -381,13 +450,21 @@ spawnParticle(Ship* ship, int radius, float v) {
     ship->particles[(ship->numOfParticles) % 10].v = v;
 }
 
-resetParticles(Ship* ship) {
-    for (int i = 0;i<ship->numOfRenderParticles;i++) {
+resetParticles(Ship* ship)
+{
+    for (int i = 0;i<ship->numOfRenderParticles;i++)
+    {
         ship->particles[i].radius = 0;
     }
 }
 
-int main( int argc, char* args[]) {
+removeProjectiles()
+{
+
+}
+
+int main( int argc, char* args[])
+{
 	game.initWindow = initWindow;
     game.initFont = initFont;
     game.render = render;
@@ -439,9 +516,12 @@ int main( int argc, char* args[]) {
 	
     int on_ground = 0;
 	
-    while (game.running) {
-		while(SDL_PollEvent(&game.event)) {
-	    	switch(game.event.type) {
+    while (game.running)
+    {
+		while(SDL_PollEvent(&game.event))
+        {
+	    	switch(game.event.type)
+            {
 			case SDL_QUIT:
 				// shut down
 				game.running = 0;
@@ -454,45 +534,59 @@ int main( int argc, char* args[]) {
         ship1.F_thrust = 0;
         ship1.resetParticlesSwitch = 1;
 
-        if (kbmState[SDL_SCANCODE_W]) {
+        if (kbmState[SDL_SCANCODE_W])
+        {
             ship1.F_thrust = 1400;
             ship1.numOfRenderParticles = 10;
             ship1.resetParticlesSwitch = 0;
             spawnParticle(&ship1 ,PARTICLE_RADIUS, PARTICLE_VELOCITY);
 		}
-		if (kbmState[SDL_SCANCODE_A]) {
+		if (kbmState[SDL_SCANCODE_A])
+        {
             ship1.thrust_angle += 4;
             ship1.thrust_angle = normalizeThrustAngle((int)ship1.thrust_angle % 360);
 		}
-		else if (kbmState[SDL_SCANCODE_D]) {
+		else if (kbmState[SDL_SCANCODE_D])
+        {
             ship1.thrust_angle -= 4;
             ship1.thrust_angle = normalizeThrustAngle((int)ship1.thrust_angle % 360);
         }
-        if (kbmState[SDL_SCANCODE_SPACE]) {
-            if (SDL_GetTicks() - t_projectile > 100) {
+        if (kbmState[SDL_SCANCODE_SPACE])
+        {
+            if (SDL_GetTicks() - t_projectile > 1)
+            {
                 spawnProjectile(ship1.trianglePoints[0].x, ship1.trianglePoints[0].y, PROJECTILE_RADIUS, ship1.thrust_angle, PROJECTILE_VELOCITY);
                 t_projectile = SDL_GetTicks();
             }
         }
-		if (kbmState[SDL_SCANCODE_ESCAPE]) {
+        if (kbmState[SDL_SCANCODE_R])
+        {
+            freeProjectileNodes(&projectileListHead);
+        }
+		if (kbmState[SDL_SCANCODE_ESCAPE])
+        {
 			game.running = 0;
 		}
  
         ship1.on_ground = 0;
-        for(int i = 0;i<4;i++) {
-            if(ship1.trianglePoints[i].y >= level.floor.y) {
+        for(int i = 0;i<4;i++)
+        {
+            if(ship1.trianglePoints[i].y >= level.floor.y)
+            {
                 ship1.on_ground = 1;
                 break;
             }
         }
         
-        if (ship1.resetParticlesSwitch) {
+        if (ship1.resetParticlesSwitch)
+        {
             resetParticles(&ship1);
         }
         checkProjectileCollision();
         applyForces();
 
-        if ( (1000 / FPS) > SDL_GetTicks() - startTick) {
+        if ( (1000 / FPS) > SDL_GetTicks() - startTick)
+        {
             SDL_Delay(1000 / FPS - (SDL_GetTicks() - startTick));
         }
 
